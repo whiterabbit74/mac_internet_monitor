@@ -12,7 +12,6 @@
 
 # Build products
 build/
-*.app/
 DerivedData/
 
 # Swift Package Manager
