@@ -1,0 +1,27 @@
+# macOS
+.DS_Store
+
+# Xcode
+*.xcscmblueprint
+*.xccheckout
+*.moved-aside
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+
+# Build products
+build/
+*.app/
+DerivedData/
+
+# Swift Package Manager
+.build/
+Package.resolved
+
+# IDEs
+.vscode/
+.idea/
+
+# Logs
+*.log
