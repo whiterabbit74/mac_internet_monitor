@@ -32,7 +32,7 @@
 
 1. **Клонируйте репозиторий**
    ```bash
-   git clone https://github.com/yourusername/internet-monitor.git
+   git clone https://github.com/whiterabbit74/mac_internet_monitor.git
    cd internet-monitor
    ```
 
@@ -50,7 +50,7 @@
 
 ### Готовый .app бандл
 
-1. Скачайте последний релиз из раздела [Releases](../../releases)
+1. Скачайте последний релиз из раздела [Releases](https://github.com/whiterabbit74/mac_internet_monitor/releases)
 2. Перетащите `InternetMonitor.app` в папку `Applications`
 3. Запустите приложение из Launchpad
 
@@ -215,8 +215,8 @@ MIT License - см. файл [LICENSE](LICENSE)
 ## 📞 Поддержка
 
 - 📧 Email: support@internetmonitor.app
-- 🐛 Issues: [GitHub Issues](../../issues)
-- 📖 Wiki: [Документация](../../wiki)
+- 🐛 Issues: [GitHub Issues](https://github.com/whiterabbit74/mac_internet_monitor/issues)
+- 📖 Wiki: [Документация](https://github.com/whiterabbit74/mac_internet_monitor/wiki)
 
 ## 🔄 История версий
 
