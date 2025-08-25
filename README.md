@@ -50,7 +50,7 @@
 
 ### Готовый .app бандл
 
-1. Скачайте последний релиз из раздела [Releases](https://github.com/whiterabbit74/mac_internet_monitor/releases)
+1. Скачайте готовое приложение из папки [releases/](https://github.com/whiterabbit74/mac_internet_monitor/tree/main/releases)
 2. Перетащите `InternetMonitor.app` в папку `Applications`
 3. Запустите приложение из Launchpad
 
