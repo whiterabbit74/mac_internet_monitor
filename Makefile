@@ -40,7 +40,7 @@ build:
 	@chmod +x build/$(APP_NAME)/Contents/MacOS/InternetMonitor
 
 	@echo "🎨 Copying resources..."
-	@cp -r Sources/InternetMonitor build/$(APP_NAME)/Contents/Resources/ 2>/dev/null || true
+	@cp -r Resources/* build/$(APP_NAME)/Contents/Resources/ 2>/dev/null || true
 	@cp README.md build/$(APP_NAME)/Contents/Resources/ 2>/dev/null || true
 
 	@echo "✅ App bundle created: build/$(APP_NAME)"
