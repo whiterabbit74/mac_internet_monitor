@@ -100,14 +100,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let newOpacity = defaults.float(forKey: "iconOpacity")
 
         if newOpacity > 0 && abs(CGFloat(newOpacity) - (statusBarController?.iconOpacity ?? 0.5)) > 0.01 {
-            print("🔄 Обнаружено изменение прозрачности иконки")
+            print("🔄 Detected icon opacity change")
             statusBarController?.updateIconOpacity()
         }
 
         // Проверяем, изменился ли размер иконки
         let newSize = defaults.float(forKey: "iconSize")
         if newSize > 0 && abs(CGFloat(newSize) - (statusBarController?.iconSize ?? 18.0)) > 0.1 {
-            print("📏 Обнаружено изменение размера иконки")
+            print("📏 Detected icon size change")
             statusBarController?.updateIconSize()
         }
 
@@ -116,7 +116,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let newInterval = defaults.integer(forKey: "checkInterval")
 
         if newEndpoint != nil || newInterval > 0 {
-            print("🌐 Обнаружено изменение сетевых настроек - перезапускаем мониторинг")
+            print("🌐 Detected network settings change - restarting monitoring")
             networkMonitor?.restartMonitoring()
         }
     }
@@ -126,7 +126,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Обновляем иконки при изменении темы системы
         DispatchQueue.main.async { [weak self] in
             if let statusBarController = self?.statusBarController {
-                print("🎨 Изменение темы системы - обновляем иконки")
+                print("🎨 System theme change - updating icons")
                 statusBarController.updateIconsForThemeChange()
             }
         }

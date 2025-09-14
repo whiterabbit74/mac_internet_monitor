@@ -31,9 +31,11 @@
     </dict>
     <key>NSHumanReadableCopyright</key>
     <string>Copyright © 2024 Internet Monitor. All rights reserved.</string>
-    <key>NSMainNibFile</key>
-    <string>MainMenu</string>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
+    <key>NSSupportsAutomaticTermination</key>
+    <true/>
+    <key>NSSupportsSuddenTermination</key>
+    <true/>
 </dict>
 </plist>

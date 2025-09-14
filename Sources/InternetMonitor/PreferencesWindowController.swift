@@ -36,7 +36,7 @@ class PreferencesWindowController: NSWindowController {
     private func setupWindow() {
         guard let window = window else { return }
 
-        window.title = "⚙️ Internet Monitor Settings"
+        window.title = "Internet Monitor Settings"
 
         // Устанавливаем размер окна
         let contentSize = NSSize(width: 540, height: 620)
@@ -50,17 +50,33 @@ class PreferencesWindowController: NSWindowController {
         window.isMovableByWindowBackground = true
         window.backgroundColor = NSColor.windowBackgroundColor
 
-        // Добавляем эффект вибранции (modern blur effect)
-        let visualEffect = NSVisualEffectView()
-        visualEffect.blendingMode = .behindWindow
-        visualEffect.material = .windowBackground
-        visualEffect.state = .active
-        window.contentView = visualEffect
+        // Эффект вибранции настроится в setupViewController
     }
 
     private func setupViewController() {
         preferencesViewController = PreferencesViewController()
-        window?.contentViewController = preferencesViewController
+
+        // Создаем визуальный эффект как базовый view
+        let visualEffect = NSVisualEffectView()
+        visualEffect.blendingMode = .behindWindow
+        visualEffect.material = .windowBackground
+        visualEffect.state = .active
+
+        // Устанавливаем controller в качестве содержимого
+        preferencesViewController?.view.wantsLayer = true
+        preferencesViewController?.view.layer?.backgroundColor = NSColor.clear.cgColor
+
+        // Добавляем controller view к visual effect view
+        visualEffect.addSubview(preferencesViewController!.view)
+        preferencesViewController!.view.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            preferencesViewController!.view.topAnchor.constraint(equalTo: visualEffect.topAnchor),
+            preferencesViewController!.view.bottomAnchor.constraint(equalTo: visualEffect.bottomAnchor),
+            preferencesViewController!.view.leadingAnchor.constraint(equalTo: visualEffect.leadingAnchor),
+            preferencesViewController!.view.trailingAnchor.constraint(equalTo: visualEffect.trailingAnchor)
+        ])
+
+        window?.contentView = visualEffect
     }
 
     // MARK: - Public Methods
@@ -77,30 +93,30 @@ class PreferencesWindowController: NSWindowController {
 class PreferencesViewController: NSViewController {
 
     // MARK: - UI Elements
-    private let endpointLabel = NSTextField(labelWithString: "🌐 Endpoint:")
+    private let endpointLabel = NSTextField(labelWithString: "Endpoint:")
     private let endpointPopup = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 150, height: 24), pullsDown: false)
-    private let customEndpointLabel = NSTextField(labelWithString: "🔧 Свой endpoint:")
+    private let customEndpointLabel = NSTextField(labelWithString: "Custom endpoint:")
     private let customEndpointTextField = NSTextField(string: "")
 
-    private let intervalLabel = NSTextField(labelWithString: "⏰ Интервал проверки (сек):")
+    private let intervalLabel = NSTextField(labelWithString: "Check interval (seconds):")
     private let intervalTextField = NSTextField(string: "5")
 
-    private let notificationsCheckbox = NSButton(checkboxWithTitle: "🔔 Включить уведомления", target: nil, action: nil)
-    private let disconnectNotificationCheckbox = NSButton(checkboxWithTitle: "⚠️ Уведомление при отключении интернета", target: nil, action: nil)
-    private let tooltipCheckbox = NSButton(checkboxWithTitle: "💬 Показывать подсказки", target: nil, action: nil)
-    private let autoStartCheckbox = NSButton(checkboxWithTitle: "🚀 Автозапуск при входе", target: nil, action: nil)
-    private let showInDockCheckbox = NSButton(checkboxWithTitle: "🗂️ Показать в доке", target: nil, action: nil)
+    private let notificationsCheckbox = NSButton(checkboxWithTitle: "Enable notifications", target: nil, action: nil)
+    private let disconnectNotificationCheckbox = NSButton(checkboxWithTitle: "Show disconnect notifications", target: nil, action: nil)
+    private let tooltipCheckbox = NSButton(checkboxWithTitle: "Show tooltips", target: nil, action: nil)
+    private let autoStartCheckbox = NSButton(checkboxWithTitle: "Launch at login", target: nil, action: nil)
+    private let showInDockCheckbox = NSButton(checkboxWithTitle: "Show in Dock", target: nil, action: nil)
 
-    private let opacityLabel = NSTextField(labelWithString: "👁️ Прозрачность иконки:")
+    private let opacityLabel = NSTextField(labelWithString: "Icon opacity:")
     private let opacitySlider = NSSlider(frame: NSRect(x: 0, y: 0, width: 200, height: 24))
     private let opacityValueLabel = NSTextField(labelWithString: "50%")
 
-    private let sizeLabel = NSTextField(labelWithString: "📏 Размер иконки:")
+    private let sizeLabel = NSTextField(labelWithString: "Icon size:")
     private let sizeSlider = NSSlider(frame: NSRect(x: 0, y: 0, width: 200, height: 24))
     private let sizeValueLabel = NSTextField(labelWithString: "18px")
 
-    private let saveButton = NSButton(title: "💾 Сохранить", target: nil, action: #selector(savePreferences))
-    private let cancelButton = NSButton(title: "❌ Отмена", target: nil, action: #selector(cancelPreferences))
+    private let saveButton = NSButton(title: "Save", target: nil, action: #selector(savePreferences))
+    private let cancelButton = NSButton(title: "Cancel", target: nil, action: #selector(cancelPreferences))
 
     // MARK: - View Lifecycle
     override func loadView() {
@@ -130,6 +146,9 @@ class PreferencesViewController: NSViewController {
         // Настраиваем общий вид с поддержкой тем
         setupViewAppearance()
 
+        // Настраиваем шрифты лейблов
+        setupLabels()
+
         // Настраиваем поля ввода
         setupTextFields()
 
@@ -153,42 +172,35 @@ class PreferencesViewController: NSViewController {
     }
 
     private func setupViewAppearance() {
-        // Фон окна с поддержкой темной/светлой темы
-        view.layer?.backgroundColor = NSColor.clear.cgColor
-
-        // Создаем красивый фон с градиентом
-        createGradientBackground()
-
-        // Добавляем тень для глубины
-        view.shadow = NSShadow()
-        view.shadow?.shadowColor = NSColor.black.withAlphaComponent(0.1)
-        view.shadow?.shadowOffset = NSSize(width: 0, height: -2)
-        view.shadow?.shadowBlurRadius = 8
+        // Простой системный фон
+        view.wantsLayer = true
+        view.layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
     }
 
-    private func createGradientBackground() {
-        let gradientLayer = CAGradientLayer()
-        gradientLayer.frame = view.bounds
+    private func setupLabels() {
+        // Системные шрифты для всех лейблов
+        let labels = [endpointLabel, customEndpointLabel, intervalLabel,
+                      opacityLabel, sizeLabel, opacityValueLabel, sizeValueLabel]
 
-        let isDarkMode = NSApp.effectiveAppearance.name == .darkAqua
-
-        if isDarkMode {
-            gradientLayer.colors = [
-                NSColor.windowBackgroundColor.withAlphaComponent(0.95).cgColor,
-                NSColor.windowBackgroundColor.withAlphaComponent(0.9).cgColor
-            ]
-        } else {
-            gradientLayer.colors = [
-                NSColor.windowBackgroundColor.withAlphaComponent(0.98).cgColor,
-                NSColor.controlBackgroundColor.withAlphaComponent(0.95).cgColor
-            ]
+        labels.forEach { label in
+            label.font = NSFont.systemFont(ofSize: NSFont.systemFontSize)
+            label.textColor = NSColor.labelColor
         }
 
-        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
-        gradientLayer.endPoint = CGPoint(x: 0, y: 1)
+        // Меньшие лейблы для значений
+        opacityValueLabel.font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize)
+        opacityValueLabel.textColor = NSColor.secondaryLabelColor
+        sizeValueLabel.font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize)
+        sizeValueLabel.textColor = NSColor.secondaryLabelColor
 
-        view.layer?.insertSublayer(gradientLayer, at: 0)
+        // Системные шрифты для чекбоксов
+        let checkboxes = [notificationsCheckbox, disconnectNotificationCheckbox,
+                         tooltipCheckbox, autoStartCheckbox, showInDockCheckbox]
+        checkboxes.forEach { checkbox in
+            checkbox.font = NSFont.systemFont(ofSize: NSFont.systemFontSize)
+        }
     }
+
 
     private func setupTextFields() {
         customEndpointTextField.placeholderString = "e.g., google.com or 8.8.8.8"
@@ -201,44 +213,23 @@ class PreferencesViewController: NSViewController {
         formatter.maximum = 60
         intervalTextField.formatter = formatter
 
-        // Современные стили для текстовых полей
+        // Системные стили для текстовых полей
         [customEndpointTextField, intervalTextField].forEach { field in
-            field.wantsLayer = true
-            field.layer?.cornerRadius = 8
-            field.layer?.borderWidth = 1.5
-            field.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.5).cgColor
-            field.backgroundColor = NSColor.controlBackgroundColor.withAlphaComponent(0.8)
-            field.textColor = NSColor.labelColor
-            field.font = NSFont.systemFont(ofSize: 13, weight: .regular)
-            field.focusRingType = .none
-
-            // Добавляем внутренние отступы
-            field.cell?.usesSingleLineMode = true
-            field.cell?.wraps = false
-            field.cell?.isScrollable = true
-
-            // Лёгкая тень
-            field.layer?.shadowColor = NSColor.black.withAlphaComponent(0.1).cgColor
-            field.layer?.shadowOffset = NSSize(width: 0, height: 1)
-            field.layer?.shadowRadius = 2
-            field.layer?.shadowOpacity = 1
+            field.font = NSFont.systemFont(ofSize: NSFont.systemFontSize)
+            field.textColor = NSColor.controlTextColor
         }
     }
 
     private func setupEndpointPopup() {
-        // Добавляем популярные endpoints с эмодзи
-        endpointPopup.addItem(withTitle: "🌍 8.8.8.8 (Google DNS)")
-        endpointPopup.addItem(withTitle: "🍎 apple.com (Apple)")
-        endpointPopup.addItem(withTitle: "☁️ 1.1.1.1 (Cloudflare)")
-        endpointPopup.addItem(withTitle: "🇷🇺 yandex.ru (Yandex)")
-        endpointPopup.addItem(withTitle: "⚙️ Custom endpoint...")
+        // Популярные endpoints
+        endpointPopup.addItem(withTitle: "8.8.8.8 (Google DNS)")
+        endpointPopup.addItem(withTitle: "apple.com (Apple)")
+        endpointPopup.addItem(withTitle: "1.1.1.1 (Cloudflare)")
+        endpointPopup.addItem(withTitle: "yandex.ru (Yandex)")
+        endpointPopup.addItem(withTitle: "Custom endpoint...")
 
-        // Современный стиль для popup button
-        endpointPopup.wantsLayer = true
-        endpointPopup.layer?.cornerRadius = 8
-        endpointPopup.layer?.borderWidth = 1.5
-        endpointPopup.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.5).cgColor
-        endpointPopup.font = NSFont.systemFont(ofSize: 13, weight: .medium)
+        // Системный стиль для popup button
+        endpointPopup.font = NSFont.systemFont(ofSize: NSFont.systemFontSize)
         endpointPopup.bezelStyle = .rounded
 
         // Лёгкая тень
@@ -321,68 +312,25 @@ class PreferencesViewController: NSViewController {
     }
 
     private func setupButton(_ button: NSButton, isPrimary: Bool) {
-        button.wantsLayer = true
-        button.layer?.cornerRadius = 8
-        button.layer?.masksToBounds = false
         button.bezelStyle = .rounded
-        button.font = NSFont.systemFont(ofSize: 13, weight: isPrimary ? .semibold : .medium)
+        button.font = NSFont.systemFont(ofSize: NSFont.systemFontSize)
 
         if isPrimary {
-            // Первичная кнопка с акцентным цветом
             button.hasDestructiveAction = false
-            button.layer?.shadowColor = NSColor.controlAccentColor.withAlphaComponent(0.3).cgColor
-            button.layer?.shadowOffset = NSSize(width: 0, height: 2)
-            button.layer?.shadowRadius = 4
-            button.layer?.shadowOpacity = 1
-        } else {
-            // Вторичная кнопка
-            button.layer?.borderWidth = 1
-            button.layer?.borderColor = NSColor.separatorColor.cgColor
-            button.layer?.shadowColor = NSColor.black.withAlphaComponent(0.1).cgColor
-            button.layer?.shadowOffset = NSSize(width: 0, height: 1)
-            button.layer?.shadowRadius = 2
-            button.layer?.shadowOpacity = 1
         }
     }
 
     // MARK: - Theme Support
     @objc private func systemAppearanceChanged() {
-        // Обновляем цвета всех элементов при смене темы
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-
-            // Пересоздаем градиентный фон
-            self.view.layer?.sublayers?.removeFirst() // Удаляем старый градиент
-            self.createGradientBackground()
-
-            // Обновляем цвета границ для текстовых полей
-            [self.customEndpointTextField, self.intervalTextField].forEach { field in
-                field.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.5).cgColor
-                field.backgroundColor = NSColor.controlBackgroundColor.withAlphaComponent(0.8)
-                field.textColor = NSColor.labelColor
-            }
-
-            // Обновляем цвета для popup button
-            self.endpointPopup.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.5).cgColor
-
-            // Обновляем цвет текста лейблов значений
-            self.opacityValueLabel.textColor = NSColor.secondaryLabelColor
-            self.sizeValueLabel.textColor = NSColor.secondaryLabelColor
-
-            // Обновляем стили кнопок
-            self.setupButton(self.saveButton, isPrimary: true)
-            self.setupButton(self.cancelButton, isPrimary: false)
-
-            // Принудительно перерисовываем view
-            self.view.needsDisplay = true
-        }
+        // Обновляем фон для соответствия системной теме
+        view.layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
     }
 
     // MARK: - Animation and Visual Feedback
     private func animateSaveAction(completion: @escaping () -> Void) {
         // Меняем текст кнопки на "Сохраняем..."
         let originalTitle = saveButton.title
-        saveButton.title = "💾 Saving..."
+        saveButton.title = "Saving..."
         saveButton.isEnabled = false
 
         // Пульсирующая анимация
@@ -716,9 +664,9 @@ class PreferencesViewController: NSViewController {
 
         do {
             try process.run()
-            print("✅ Автозапуск включен")
+            print("✅ Auto-start enabled")
         } catch {
-            print("❌ Ошибка при включении автозапуска: \(error.localizedDescription)")
+            print("❌ Error enabling auto-start: \(error.localizedDescription)")
         }
     }
 
@@ -736,9 +684,9 @@ class PreferencesViewController: NSViewController {
 
         do {
             try process.run()
-            print("✅ Автозапуск отключен")
+            print("✅ Auto-start disabled")
         } catch {
-            print("❌ Ошибка при отключении автозапуска: \(error.localizedDescription)")
+            print("❌ Error disabling auto-start: \(error.localizedDescription)")
         }
     }
 

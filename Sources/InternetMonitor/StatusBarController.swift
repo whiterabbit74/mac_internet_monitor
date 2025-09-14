@@ -7,7 +7,6 @@
 //
 
 import AppKit
-import UserNotifications
 
 class StatusBarController: NSObject {
 
@@ -193,7 +192,7 @@ class StatusBarController: NSObject {
         let defaults = UserDefaults.standard
         let opacity = defaults.float(forKey: "iconOpacity")
         iconOpacity = opacity > 0 ? CGFloat(opacity) : 0.5  // По умолчанию 50%
-        print("📱 Загружена прозрачность иконки: \(Int(iconOpacity * 100))%")
+        print("📱 Loaded icon opacity: \(Int(iconOpacity * 100))%")
     }
 
     // Загрузка настроек размера иконки
@@ -201,7 +200,7 @@ class StatusBarController: NSObject {
         let defaults = UserDefaults.standard
         let size = defaults.float(forKey: "iconSize")
         iconSize = size > 0 ? CGFloat(size) : 18.0  // По умолчанию 18px
-        print("📏 Загружен размер иконки: \(Int(iconSize))px")
+        print("📏 Loaded icon size: \(Int(iconSize))px")
     }
 
     // Обновление прозрачности всех иконок
@@ -255,28 +254,18 @@ class StatusBarController: NSObject {
         loadIconSizeSettings()
         setupStatusBarItem()
         setupNetworkMonitoring()
-        requestNotificationPermission()
-        setupNotificationDelegate()
+        // Уведомления временно отключены
+        print("🔔 Notification setup skipped for debugging")
     }
 
-    // Запрос разрешения на уведомления
+    // Запрос разрешения на уведомления (отключено)
     private func requestNotificationPermission() {
-        UNUserNotificationCenter.current().requestAuthorization(
-            options: [.alert, .sound, .badge]
-        ) { granted, error in
-            if let error = error {
-                print("❌ Ошибка запроса разрешений уведомлений: \(error.localizedDescription)")
-            } else if granted {
-                print("✅ Разрешения на уведомления получены")
-            } else {
-                print("⚠️ Пользователь отклонил разрешения на уведомления")
-            }
-        }
+        print("⚠️ Notifications disabled for debugging")
     }
 
-    // Настройка делегата для обработки действий уведомлений
+    // Настройка делегата для обработки действий уведомлений (отключено)
     private func setupNotificationDelegate() {
-        UNUserNotificationCenter.current().delegate = self
+        print("⚠️ Notification delegate setup disabled")
     }
 
     deinit {
@@ -348,62 +337,15 @@ class StatusBarController: NSObject {
     }
 
     private func showGeneralStatusNotification() {
-        let content = UNMutableNotificationContent()
-        content.title = "🌐 Internet Monitor"
-
         let statusText = getStatusText().replacingOccurrences(of: "Статус: ", with: "")
-        content.body = statusText
-        content.sound = nil // Бесшумное уведомление для обычных смен статуса
-
-        let request = UNNotificationRequest(
-            identifier: "status-change",
-            content: content,
-            trigger: nil
-        )
-
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
-                print("❌ Ошибка отправки уведомления: \(error.localizedDescription)")
-            }
-        }
+        print("🔔 Уведомление: \(statusText)")
+        // TODO: Восстановить UNUserNotificationCenter после исправления bundle issue
     }
 
     private func showDisconnectionNotification() {
-        let content = UNMutableNotificationContent()
-        content.title = "🔴 Internet Monitor"
-        content.body = "Интернет-соединение прервано"
-        content.sound = .default
-
-        // Добавляем действие для быстрого обновления
-        let refreshAction = UNNotificationAction(
-            identifier: "REFRESH_ACTION",
-            title: "Обновить",
-            options: []
-        )
-
-        let category = UNNotificationCategory(
-            identifier: "INTERNET_STATUS",
-            actions: [refreshAction],
-            intentIdentifiers: [],
-            options: []
-        )
-
-        UNUserNotificationCenter.current().setNotificationCategories([category])
-        content.categoryIdentifier = "INTERNET_STATUS"
-
-        let request = UNNotificationRequest(
-            identifier: "internet-disconnected",
-            content: content,
-            trigger: nil // Показать немедленно
-        )
-
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
-                print("❌ Ошибка отправки уведомления: \(error.localizedDescription)")
-            } else {
-                print("✅ Уведомление о отключении отправлено")
-            }
-        }
+        // Временно используем простое логирование
+        print("🔔 Notification: Internet connection interrupted")
+        // TODO: Восстановить UNUserNotificationCenter после исправления bundle issue
     }
 
     private func convertStatus(_ status: NetworkMonitor.ConnectionStatus) -> ConnectionStatus {
@@ -584,13 +526,13 @@ class StatusBarController: NSObject {
     private func getStatusText() -> String {
         switch currentStatus {
         case .connected:
-            return "Статус: 🟢 Подключено"
+            return "Status: Connected"
         case .unstable:
-            return "Статус: 🟡 Нестабильно"
+            return "Status: Unstable"
         case .disconnected:
-            return "Статус: 🔴 Отключено"
+            return "Status: Disconnected"
         case .unknown:
-            return "Статус: Неизвестно"
+            return "Status: Unknown"
         }
     }
 
@@ -631,37 +573,5 @@ extension StatusBarController: NSMenuDelegate {
     }
 }
 
-// MARK: - UNUserNotificationCenterDelegate
-extension StatusBarController: UNUserNotificationCenterDelegate {
-    // Обработка нажатия на действие в уведомлении
-    func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse,
-        withCompletionHandler completionHandler: @escaping () -> Void
-    ) {
-        switch response.actionIdentifier {
-        case "REFRESH_ACTION":
-            // Пользователь нажал "Обновить"
-            networkMonitor.refreshStatus()
-        case UNNotificationDefaultActionIdentifier:
-            // Пользователь нажал на само уведомление
-            break
-        default:
-            break
-        }
-        completionHandler()
-    }
-
-    // Показываем уведомления даже когда приложение активно
-    func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        willPresent notification: UNNotification,
-        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
-    ) {
-        if #available(macOS 11.0, *) {
-            completionHandler([.banner, .sound])
-        } else {
-            completionHandler([.alert, .sound])
-        }
-    }
-}
+// MARK: - UNUserNotificationCenterDelegate (отключено)
+// TODO: Восстановить после исправления проблемы с bundle

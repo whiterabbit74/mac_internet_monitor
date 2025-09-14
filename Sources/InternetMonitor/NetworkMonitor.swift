@@ -180,7 +180,7 @@ class NetworkMonitor {
                 }
             }
         } catch {
-            print("⚠️ Ошибка парсинга ping вывода: \(error)")
+            print("⚠️ Error parsing ping output: \(error)")
         }
 
         return nil
@@ -339,11 +339,11 @@ class NetworkMonitor {
     func getStatusDescription() -> String {
         switch currentStatus {
         case .connected:
-            return "Интернет-соединение активно"
+            return "Internet connection active"
         case .unstable:
-            return "Нестабильное соединение"
+            return "Unstable connection"
         case .disconnected:
-            return "Отсутствует интернет-соединение"
+            return "No internet connection"
         }
     }
 }
