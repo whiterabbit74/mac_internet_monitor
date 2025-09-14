@@ -19,6 +19,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         print("🌐 Internet Monitor starting...")
 
+        // Проверяем настройки отображения в доке
+        setupDockVisibility()
+
         // Инициализация компонентов
         setupApplication()
 
@@ -26,6 +29,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         startMonitoring()
 
         print("✅ Internet Monitor started successfully!")
+    }
+
+    // Настройка видимости в доке
+    private func setupDockVisibility() {
+        let showInDock = UserDefaults.standard.bool(forKey: "showInDock")
+        if showInDock {
+            NSApp.setActivationPolicy(.regular)
+        } else {
+            NSApp.setActivationPolicy(.accessory)
+        }
+        print("🗂️ Dock visibility: \(showInDock ? "visible" : "hidden")")
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {

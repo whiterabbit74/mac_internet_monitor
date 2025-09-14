@@ -111,35 +111,79 @@ class NetworkMonitor {
     }
 
     private func checkWithPing() {
-        let endpoint = "8.8.8.8" // Google DNS для ping
+        let endpoint = getEndpoint()
+        print("🏓 Attempting ping fallback to: \(endpoint)")
 
         // Используем системный ping
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/sbin/ping")
-        process.arguments = ["-c", "1", "-W", "2", endpoint]
+        process.arguments = ["-c", "1", "-W", "3000", endpoint] // 3 секунды timeout
 
-        let pipe = Pipe()
-        process.standardOutput = pipe
+        let outputPipe = Pipe()
+        let errorPipe = Pipe()
+        process.standardOutput = outputPipe
+        process.standardError = errorPipe
         process.standardInput = nil
-        process.standardError = pipe
+
+        let startTime = Date()
 
         do {
             try process.run()
             process.waitUntilExit()
 
+            let endTime = Date()
             let status = process.terminationStatus
+
             if status == 0 {
-                print("✅ Ping successful")
-                let metrics = NetworkMetrics(latency: 50, packetLoss: 0, timestamp: Date())
+                // Парсим вывод ping для получения реальной latency
+                let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
+                let outputString = String(data: outputData, encoding: .utf8) ?? ""
+
+                let latency = parsePingLatency(from: outputString) ?? Int(endTime.timeIntervalSince(startTime) * 1000)
+
+                print("✅ Ping successful: \(latency)ms")
+                let metrics = NetworkMetrics(latency: latency, packetLoss: 0, timestamp: Date())
                 self.handleSuccessfulCheck(metrics)
             } else {
-                print("❌ Ping failed")
-                self.handleFailedCheck(NSError(domain: "NetworkMonitor", code: -1, userInfo: [NSLocalizedDescriptionKey: "Ping failed"]))
+                let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
+                let errorString = String(data: errorData, encoding: .utf8) ?? "Unknown error"
+                print("❌ Ping failed: \(errorString)")
+                self.handleFailedCheck(NSError(domain: "NetworkMonitor", code: Int(status), userInfo: [NSLocalizedDescriptionKey: "Ping failed: \(errorString)"]))
             }
         } catch {
             print("❌ Ping error: \(error.localizedDescription)")
             self.handleFailedCheck(error)
         }
+
+        // Очищаем ресурсы
+        outputPipe.fileHandleForReading.closeFile()
+        errorPipe.fileHandleForReading.closeFile()
+    }
+
+    // Парсер latency из вывода ping
+    private func parsePingLatency(from output: String) -> Int? {
+        // Пример: "64 bytes from 8.8.8.8: icmp_seq=1 ttl=118 time=23.456 ms"
+        let pattern = #"time=([0-9.]+)\s*ms"#
+
+        do {
+            let regex = try NSRegularExpression(pattern: pattern, options: [])
+            let nsString = output as NSString
+            let results = regex.matches(in: output, options: [], range: NSRange(location: 0, length: nsString.length))
+
+            if let match = results.first,
+               match.numberOfRanges > 1 {
+                let timeRange = match.range(at: 1)
+                let timeString = nsString.substring(with: timeRange)
+
+                if let timeDouble = Double(timeString) {
+                    return Int(timeDouble.rounded())
+                }
+            }
+        } catch {
+            print("⚠️ Ошибка парсинга ping вывода: \(error)")
+        }
+
+        return nil
     }
 
     private func checkConnectivity(completion: @escaping (Result<NetworkMetrics, Error>) -> Void) {
